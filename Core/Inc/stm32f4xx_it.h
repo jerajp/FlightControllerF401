@@ -59,6 +59,8 @@ void SysTick_Handler(void);
 void TIM2_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
+extern uint32_t BattmVAVG;
+
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

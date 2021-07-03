@@ -20,13 +20,21 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
+#include "i2c.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include "nrf24.h"
+#include "gyro.h"
+#include "stm32f4xx_it.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,8 +55,42 @@
 
 /* USER CODE BEGIN PV */
 
+uint32_t watch1,watch2,watch3,watch4,watch5,watch6;
+
 //UART DEBUG
 char UartTXbuff0[100];
+
+//NRF24
+uint8_t nRF24_payloadTX[32]; //TX buffer
+uint8_t nRF24_payloadRX[32]; //RX buffer
+const uint8_t nRF24_ADDR[3] = {5, 3, 5 }; //Address
+uint32_t wifiOK;
+uint8_t RXstpaketov=0;
+
+//NRF24 data
+uint32_t Ljoyupdown;
+uint32_t Ljoyleftright;
+uint32_t Djoyupdown;
+uint32_t Djoyleftright;
+uint32_t potenc1;
+uint32_t potenc2;
+uint32_t togg1;
+uint32_t togg2;
+uint32_t togg3;
+uint32_t togg4;
+uint32_t togg5;
+uint32_t togg6;
+
+//MOTOR
+uint32_t MotorStatus=MOTORINIT;
+uint32_t GyroCalibStatus=0;
+
+//MPU6050
+MPU6050str	mpu6050DataStr;
+
+struct FlashDatastruct FlashDataDefault; //Default constant embedded in Code
+struct FlashDatastruct FlashDataFlash;  //Constants read from Flash
+struct FlashDatastruct FlashDataActive; //Active constants
 
 /* USER CODE END PV */
 
@@ -92,10 +134,72 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM2_Init();
+  MX_ADC1_Init();
+  MX_I2C1_Init();
+  MX_SPI1_Init();
+  MX_SPI2_Init();
+  MX_SPI3_Init();
+  MX_TIM1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_ADC_Start(&hadc1);
 
+  HAL_Delay(400);//wait for stable power
+
+  //NRF24 INIT-----------------------------------
+  SPI2->CR1|=SPI_CR1_SPE; //enable SPI
+
+  nRF24_CE_L(); // RX/TX disabled
+
+  wifiOK=nRF24_Check();
+
+  nRF24_Init(); //Default init
+
+  // Disable ShockBurst for all RX pipes
+  nRF24_DisableAA(0xFF);
+
+  // Set RF channel
+  nRF24_SetRFChannel(15); //2400Mhz + 15Mhz
+
+  // Set data rate
+  nRF24_SetDataRate(nRF24_DR_250kbps);
+
+  // Set CRC scheme
+  nRF24_SetCRCScheme(nRF24_CRC_1byte);
+
+  // Set address width, its common for all pipes (RX and TX)
+  nRF24_SetAddrWidth(3);
+
+  nRF24_SetAddr(nRF24_PIPE1, nRF24_ADDR); //PROGRAM PIPE1!! for RX
+
+  nRF24_SetRXPipe(nRF24_PIPE1, nRF24_AA_OFF, 8); // Auto-ACK: disabled
+
+
+  nRF24_SetAddr(nRF24_PIPETX, nRF24_ADDR);
+
+  // Set TX power
+  nRF24_SetTXPower(nRF24_TXPWR_18dBm);
+
+  // Set operational mode
+  nRF24_SetOperationalMode(nRF24_MODE_RX);
+
+  // Clear any pending IRQ flags
+  nRF24_ClearIRQFlags();
+
+  // Wake the transceiver
+  nRF24_SetPowerMode(nRF24_PWR_UP);
+
+  nRF24_CE_H();//Enable RX
+
+  HAL_Delay(5000);//wait to connect battery
+
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+
+  MotorStatus=MOTOROFF;
 
   HAL_TIM_Base_Start_IT(&htim2);//Start at the END of Main Initialization
 
@@ -105,7 +209,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
 
 	  //own function is used for UART TX, very basic function for direct Register write one char at the time
 	  //HAL_UART_Transmit ( &huart1, UartTXbuff0, strlen( UartTXbuff0 ), 1 ); //removed ->missing bytes on occasion
@@ -119,9 +225,6 @@ int main(void)
 	  WriteString(UartTXbuff0);
 
 	  sprintf(UartTXbuff0,T_CLR_SCREEN);
-	  WriteString(UartTXbuff0);
-
-	  sprintf(UartTXbuff0, "test test");
 	  WriteString(UartTXbuff0);
 
 	  /*sprintf(UartTXbuff0, "Motor Status %u MPU=%u \n\r",MotorStatus,MPU6050rezulatat);
@@ -272,7 +375,7 @@ int main(void)
 	  WriteString(UartTXbuff0);
 
 	  sprintf(UartTXbuff0, "Throttle Max %.2f Min I %.2f \n\r",FlashDataFlash.maxthrottle, FlashDataFlash.minthrottle);
-	  WriteString(UartTXbuff0);
+	  WriteString(UartTXbuff0);*/
 
 	  sprintf(UartTXbuff0, "\n\r" );
 	  WriteString(UartTXbuff0);
@@ -280,10 +383,10 @@ int main(void)
 	  sprintf(UartTXbuff0, "watch %d %d %d %d %d %d\n\r",watch1,watch2,watch3,watch4,watch5,watch6);
 	  WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "watch %.2f %.2f %.2f %.2f \n\r",watch1fl,watch2fl,watch3fl,watch4fl);
-	  WriteString(UartTXbuff0);*/
+	  //sprintf(UartTXbuff0, "watch %.2f %.2f %.2f %.2f \n\r",watch1fl,watch2fl,watch3fl,watch4fl);
+	  //WriteString(UartTXbuff0);
 
-    /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -331,6 +434,100 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+//Write Data into Flash starting from given address------------------------------------------------------------------
+void WriteFlashData(uint32_t StartAddr, struct FlashDatastruct *p)
+{
+	FLASH_EraseInitTypeDef EraseInitStruct;
+
+	uint32_t PageError;
+
+	EraseInitStruct.TypeErase   = FLASH_TYPEERASE_SECTORS;
+	EraseInitStruct.Sector = StartAddr;
+	EraseInitStruct.NbSectors     = 1;
+
+	HAL_FLASH_Unlock();
+
+	//FLASH_PageErase(0x800FC00); //doesn't handle all registers PER regiser in CR is not cleared
+
+	HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
+
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr, p->controlData);
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+4, (uint32_t) ( p->pid_p_gain_pitch * FLASHCONSTANTMULTIPLIER) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+8, (uint32_t) ( p->pid_i_gain_pitch * FLASHCONSTANTMULTIPLIER) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+12,(uint32_t) ( p->pid_d_gain_pitch * FLASHCONSTANTMULTIPLIER) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+16,(uint32_t) ( p->pid_p_gain_roll * FLASHCONSTANTMULTIPLIER) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+20,(uint32_t) ( p->pid_i_gain_roll * FLASHCONSTANTMULTIPLIER) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+24,(uint32_t) ( p->pid_d_gain_roll * FLASHCONSTANTMULTIPLIER) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+28,(uint32_t) ( p->pid_p_gain_yaw * FLASHCONSTANTMULTIPLIER) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+32,(uint32_t) ( p->pid_i_gain_yaw * FLASHCONSTANTMULTIPLIER) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+36,(uint32_t) ( p->pid_d_gain_yaw * FLASHCONSTANTMULTIPLIER) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+40, p->pid_max_pitch);
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+44, p->pid_i_max_pitch);
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+48, p->pid_max_roll);
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+52, p->pid_i_max_roll);
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+56, p->pid_max_yaw);
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+60, p->pid_i_max_yaw);
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+64,(uint32_t)(p->maxpitchdegree) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+68,(uint32_t)(p->maxrolldegree) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+72,(uint32_t)(p->maxyawdegree) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+76,(uint32_t)(p->minthrottle) );
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+80,(uint32_t)(p->maxthrottle) );
+
+	HAL_FLASH_Lock();
+}
+
+void EraseFlashData(uint32_t StartAddr)
+{
+	FLASH_EraseInitTypeDef EraseInitStruct;
+
+	uint32_t PageError;
+
+	EraseInitStruct.TypeErase   = FLASH_TYPEERASE_SECTORS;
+	EraseInitStruct.Sector = StartAddr;
+	EraseInitStruct.NbSectors     = 1;
+
+	HAL_FLASH_Unlock();
+
+	//FLASH_PageErase(0x800FC00); //doesn't handle all registers PER regiser in CR is not cleared
+
+	HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
+
+	HAL_FLASH_Lock();
+}
+
+
+//Check if Data on given address matches control word
+uint32_t CheckFlashData(uint32_t StartAddr)
+{
+	return *(( uint32_t *) (StartAddr) );
+}
+
+//Read Data from Flash
+void ReadFlashData(uint32_t StartAddr, struct FlashDatastruct *p)
+{
+	p->controlData= *(( uint32_t *) (StartAddr) );
+	p->pid_p_gain_pitch=(float)( (*(( uint32_t *) (StartAddr+4) )) )/FLASHCONSTANTMULTIPLIER;
+	p->pid_i_gain_pitch=(float)( (*(( uint32_t *) (StartAddr+8) )) )/FLASHCONSTANTMULTIPLIER;
+	p->pid_d_gain_pitch=(float)( (*(( uint32_t *) (StartAddr+12) )) )/FLASHCONSTANTMULTIPLIER;
+	p->pid_p_gain_roll=(float)( (*(( uint32_t *) (StartAddr+16) ))  )/FLASHCONSTANTMULTIPLIER;
+	p->pid_i_gain_roll=(float)( (*(( uint32_t *) (StartAddr+20) )) )/FLASHCONSTANTMULTIPLIER;
+	p->pid_d_gain_roll=(float)( (*(( uint32_t *) (StartAddr+24) )) )/FLASHCONSTANTMULTIPLIER;
+	p->pid_p_gain_yaw=(float)( (*(( uint32_t *) (StartAddr+28) )) )/FLASHCONSTANTMULTIPLIER;
+	p->pid_i_gain_yaw=(float)( (*(( uint32_t *) (StartAddr+32) )) )/FLASHCONSTANTMULTIPLIER;
+	p->pid_d_gain_yaw=(float)( (*(( uint32_t *) (StartAddr+36) )) )/FLASHCONSTANTMULTIPLIER;
+	p->pid_max_pitch=*(( uint32_t *) (StartAddr+40) );
+	p->pid_i_max_pitch=*(( uint32_t *) (StartAddr+44) );
+	p->pid_max_roll=*(( uint32_t *) (StartAddr+48) );
+	p->pid_i_max_roll=*(( uint32_t *) (StartAddr+52) );
+	p->pid_max_yaw=*(( uint32_t *) (StartAddr+56) );
+	p->pid_i_max_yaw=*(( uint32_t *) (StartAddr+60) );
+	p->maxpitchdegree=(float)( (*(( uint32_t *) (StartAddr+64) )) );
+	p->maxrolldegree=(float)( (*(( uint32_t *) (StartAddr+68) )) );
+	p->maxyawdegree=(float)( (*(( uint32_t *) (StartAddr+72) )) );
+	p->minthrottle=(float)( (*(( uint32_t *) (StartAddr+76) )) );
+	p->maxthrottle=(float)( (*(( uint32_t *) (StartAddr+80) )) );
+}
 
 /* Print character to array */
 void WriteString(char string[])
