@@ -146,7 +146,50 @@ int main(void)
 
   HAL_ADC_Start(&hadc1);
 
+  //DEFAULT FLASH CONSTANTS--------------------------------------------------------------------------
+  FlashDataDefault.controlData=CONTROLWORD;
+  FlashDataDefault.pid_p_gain_pitch=3.0;
+  FlashDataDefault.pid_i_gain_pitch=0.0;
+  FlashDataDefault.pid_d_gain_pitch=400.0;
+  FlashDataDefault.pid_p_gain_roll=3.0;
+  FlashDataDefault.pid_i_gain_roll=0.0;
+  FlashDataDefault.pid_d_gain_roll=400.0;
+  FlashDataDefault.pid_p_gain_yaw=3.0;
+  FlashDataDefault.pid_i_gain_yaw=0.0;
+  FlashDataDefault.pid_d_gain_yaw=0.0;
+  FlashDataDefault.pid_max_pitch = 400;
+  FlashDataDefault.pid_i_max_pitch = 100;
+  FlashDataDefault.pid_max_roll = 400;
+  FlashDataDefault.pid_i_max_roll = 100;
+  FlashDataDefault.pid_max_yaw = 0; //no yaw
+  FlashDataDefault.pid_i_max_yaw = 100;
+  FlashDataDefault.maxpitchdegree=20; //degrees
+  FlashDataDefault.maxrolldegree=20;  //degrees
+  FlashDataDefault.maxyawdegree=30;  //degrees per second rotation
+  FlashDataDefault.minthrottle=80;    //80counts of 1000 to spin rotors
+  FlashDataDefault.maxthrottle=800;   //800counts of 1000 (80%)
+
+
+  if( CheckFlashData(FLASHCONSTADDR) == CONTROLWORD ) //Check if any Data is present
+  {
+	  //Read Data and Save parameters into ACTIVE structure
+	  ReadFlashData(FLASHCONSTADDR, &FlashDataActive);
+	  ReadFlashData(FLASHCONSTADDR, &FlashDataFlash);
+
+  }
+  else
+  {
+	  //Write default values into Flash, Read back data into Active Structure
+	  //WriteFlashData(FLASHCONSTADDR, &FlashDataDefault);
+	  //ReadFlashData(FLASHCONSTADDR, &FlashDataActive);
+	  //ReadFlashData(FLASHCONSTADDR, &FlashDataFlash);
+  }//------------------------------------------------------------------------------------------------------
+
+  //Gyro Init
+  MPU9250_Init();
+
   HAL_Delay(400);//wait for stable power
+
 
   //NRF24 INIT-----------------------------------
   SPI2->CR1|=SPI_CR1_SPE; //enable SPI
@@ -193,9 +236,6 @@ int main(void)
 
   nRF24_CE_H();//Enable RX
 
-  //Gyro Init
-  MPU9250_Init();
-
 
   HAL_Delay(5000);//wait to connect battery
 
@@ -203,6 +243,11 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+
+  //Get Gyro offset--------------------------------------
+  GyroCalibStatus=1;
+  //GetGyroOffset(&hi2c2, &mpu6050DataStr, GYROCALIBVALUES, 1);
+  GyroCalibStatus=0;
 
   MotorStatus=MOTOROFF;
 

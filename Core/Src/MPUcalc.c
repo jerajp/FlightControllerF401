@@ -55,15 +55,15 @@ void CalculateYawPitchRoll(struct Quaternions *q, struct GravityVector *v, struc
 
 	//MPU6050 position on Drone--> X direction (+ drone right)-Rotation around x Pitch, Y direction (+ drone front) -Rotation around Y Roll
 	ang->yaw=zRad*RADIANSTODEGREES;
-	ang->yaw+=YAWDMPOFFSET;
+	ang->yaw+=YAWOFFSET;
 	if ( ang->yaw < -180 ) ang->yaw += 360;
 
 	ang->pitch=xRad*RADIANSTODEGREES;
-	ang->pitch+=PITCHDMPOFFSET; //Add manual offset
+	ang->pitch+=PITCHOFFSET; //Add manual offset
 	if ( ang->pitch < -180 ) ang->pitch += 360;
 
 	ang->roll=yRad*RADIANSTODEGREES;
-	ang->roll+=ROLLDMPOFFSET; //Add manual offset
+	ang->roll+=ROLLOFFSET; //Add manual offset
 	if ( ang->roll < -180 ) ang->roll += 360;
 	ang->roll=-ang->roll; //positive angle drone tilt to right
 }

@@ -134,7 +134,7 @@ uint32_t togg6hist;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-
+extern TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -588,9 +588,152 @@ void TIM2_IRQHandler(void)
   //MPU 9250
   watch1=TIM2->CNT;
   MPU9250_GetData(&mpuDataStr);
-  MPU_CalculateFromRAWData(&mpuDataStr,0.002);
   watch2=TIM2->CNT;
-  watch3=watch2-watch1;
+  MPU_CalculateFromRAWData(&mpuDataStr,0.002);
+  watch3=TIM2->CNT;
+
+  //PID input Filtered
+  PitchPIDin =  /*(PitchPIDin * 0.99) */+ (mpuDataStr.Pitch  );
+  RollPIDin = /*(RollPIDin * 0.99) */+ (mpuDataStr.Roll );
+  YawPIDin = (YawPIDin * 0.99) + (mpuDataStr.AngleSpeed_Gyro_Z * 0.01);
+  //-------------------------------------------------------------------
+
+  //SCALE DATA
+  //Throttle UP->DOWN 0-100 ->scaling
+  ThrottleINscaled=ScaleDataFl(Ljoyupdown,0,100,FlashDataActive.minthrottle,FlashDataActive.maxthrottle);
+
+  //Pitch UP->DOWN 0-100 ->scaling
+  PitchINscaled=ScaleDataFl(Djoyupdown,0,100,-FlashDataActive.maxpitchdegree,FlashDataActive.maxpitchdegree);
+  //Invert
+  PitchINscaled*=(-1);
+
+  //Roll LEFT->RIGHT 0 -> 100 -> scaling
+  RollINscaled=ScaleDataFl(Djoyleftright,0,100,-FlashDataActive.maxrolldegree,FlashDataActive.maxrolldegree);
+
+  //YAW angular speed of rotation degrees/second
+  YawINscaled=ScaleDataFl(Ljoyleftright,0,100,-FlashDataActive.maxyawdegree,FlashDataActive.maxyawdegree);
+
+  //MOTOR CONTROL
+
+  //PID
+  PitchPIDout = pid(PitchINscaled, PitchPIDin, FlashDataActive.pid_p_gain_pitch, FlashDataActive.pid_i_gain_pitch, FlashDataActive.pid_d_gain_pitch, &pitch_integral, &pitch_diffErrHist, FlashDataActive.pid_i_max_pitch, FlashDataActive.pid_max_pitch);
+  RollPIDout = pid(RollINscaled, RollPIDin, FlashDataActive.pid_p_gain_roll, FlashDataActive.pid_i_gain_roll, FlashDataActive.pid_d_gain_roll,&roll_integral,&roll_diffErrHist,FlashDataActive.pid_i_max_roll, FlashDataActive.pid_max_roll );
+  YawPIDout = pid(YawINscaled, YawPIDin, FlashDataActive.pid_p_gain_yaw, FlashDataActive.pid_i_gain_yaw, FlashDataActive.pid_d_gain_yaw, &yaw_integral,&yaw_diffErrHist,FlashDataActive.pid_i_max_roll, FlashDataActive.pid_max_yaw );
+
+  //TESTING
+  if(ConnectWeakFlag==1)MotorStatus=MOTOROFF;//if connection is lost!
+
+  //Motor STATUS (TOGGLE 1)
+  //ON toggle 0->1 front start motor ON sequence
+  if(togg1hist!=togg1 && togg1==1 && ThrottleINscaled<MOTORSTARTBLOCKTHRESHOLD)MotorStatus=MOTORSTARTING;
+
+  //ON toggle 0-> motor always OFF
+  if(togg1==0)MotorStatus=MOTOROFF;
+
+  //GYROCALIB-----------------------------------------------------------------------------------------
+  if(togg2hist==0 && togg2==1 && GyroCalibStatus==0 && MotorStatus==MOTOROFF) //button 2 pressed Motor OFF Calib not in progress
+  {
+	  GyroCalibStatus=1;
+  }
+
+  //Write and Erase Flash operation timeout to prevent multiple calls in sequence
+  if(FlashWriteTimeoutCount>0)FlashWriteTimeoutCount--;
+  if(FlashEraseTimeoutCount>0)FlashEraseTimeoutCount--;
+
+  //Write active parameters in flash
+  if(FlashWriteFlag && MotorStatus==MOTOROFF && FlashWriteTimeoutCount==0)
+  {
+  	  WriteFlashData(FLASHCONSTADDR, &FlashDataActive);
+  	  ReadFlashData(FLASHCONSTADDR, &FlashDataFlash);//Read back values to Flash structure
+  	  FlashWriteFlag=0;//reset
+  }
+
+  //Erase Flash Data
+  if(FlashEraseFlag && MotorStatus==MOTOROFF && FlashEraseTimeoutCount==0)
+  {
+  	  EraseFlashData(FLASHCONSTADDR);
+  	  FlashEraseFlag=0;//reset
+  }
+
+  if(GyroCalibStatus==1)
+  {
+  		//Transfer accelerometer angles to Gyro
+  	  	mpuDataStr.Pitch = mpuDataStr.Angle_Accel_Pitch;
+  	  	mpuDataStr.Roll =  mpuDataStr.Angle_Accel_Roll;
+
+  	  	mpuDataStr.Angle_Gyro_Pitch_Rad = mpuDataStr.Angle_Accel_Pitch_Rad;
+  	  	mpuDataStr.Angle_Gyro_Roll_Rad = mpuDataStr.Angle_Accel_Roll_Rad;
+
+  	  	mpuDataStr.Angle_Gyro_Yaw = 0;
+  	  	mpuDataStr.Angle_Gyro_Yaw_Rad = 0;
+
+  		GyroCalibStatus=0;
+
+  }//--------------------------------------------------------------------------------------------------
+
+  if(MotorStatus==MOTORSTARTING)
+  {
+
+	  if(GyroCalibStatus==0)//only if calib is finished allow transition
+  	  {
+  		  //Before Start trasfer Accel Angles to Gyro Angles
+  		  mpuDataStr.Angle_Gyro_Pitch = mpuDataStr.Angle_Accel_Pitch;
+  		  mpuDataStr.Angle_Gyro_Roll = mpuDataStr.Angle_Accel_Roll;
+
+  		  MotorStatus=MOTORRUNNING;
+  	  }
+   }
+
+   //MOT 1 FRONT LEFT  CW
+   //MOT 2 FRONT RIGHT CCW
+   //MOT 3 BACK  RIGHT CW
+   //MOT 4 BACK  LEFT  CCW
+   switch(MotorStatus)
+   {
+    	  case MOTORRUNNING:
+    	  	  	  {
+    	  	  		  PWM_Mot1=1000 + ThrottleINscaled  - PitchPIDout - RollPIDout + YawPIDout;
+    	  		  	  PWM_Mot2=1000 + ThrottleINscaled  - PitchPIDout + RollPIDout - YawPIDout;
+    	  		  	  PWM_Mot3=1000 + ThrottleINscaled  + PitchPIDout + RollPIDout + YawPIDout;
+    	  		  	  PWM_Mot4=1000 + ThrottleINscaled  + PitchPIDout - RollPIDout - YawPIDout;
+
+    	  		  	  //MIN OBRATI
+    	  		  	  if(PWM_Mot1 < (1000+ FlashDataActive.minthrottle))PWM_Mot1=(1000+ FlashDataActive.minthrottle);
+    	  		  	  if(PWM_Mot2 < (1000+ FlashDataActive.minthrottle))PWM_Mot2=(1000+ FlashDataActive.minthrottle);
+    	  		  	  if(PWM_Mot3 < (1000+ FlashDataActive.minthrottle))PWM_Mot3=(1000+ FlashDataActive.minthrottle);
+    	  		  	  if(PWM_Mot4 < (1000+ FlashDataActive.minthrottle))PWM_Mot4=(1000+ FlashDataActive.minthrottle);
+
+    	  		  	  //MAX OBRATI
+    	  		  	  if(PWM_Mot1 > 1950)PWM_Mot1=1950;
+    	  		  	  if(PWM_Mot2 > 1950)PWM_Mot2=1950;
+    	  		  	  if(PWM_Mot3 > 1950)PWM_Mot3=1950;
+    	  		  	  if(PWM_Mot4 > 1950)PWM_Mot4=1950;
+
+    	  	  	  }break;
+
+    	  default:
+    	  	  	  {
+    	  	  		  PWM_Mot1=900;
+    		  	  	  PWM_Mot2=900;
+    		  	  	  PWM_Mot3=900;
+    		  	  	  PWM_Mot4=900;
+
+    		  	  	  //Reset PID
+    		  	  	  pitch_integral=0;
+    		  	  	  pitch_diffErrHist=0;
+    		  	  	  roll_integral=0;
+    		  	  	  roll_diffErrHist=0;
+    		  	  	  yaw_integral=0;
+    		  	  	  yaw_diffErrHist=0;
+
+    	  	  	  }break;
+   }
+
+   //SET PWM CHANNELS-----------------------------------------------------
+   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PWM_Mot1);
+   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, PWM_Mot2);
+   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PWM_Mot3);
+   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, PWM_Mot4);
 
   /* USER CODE END TIM2_IRQn 1 */
 }

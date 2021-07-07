@@ -78,13 +78,13 @@ extern "C" {
 #define RADIANSTODEGREES (float)(57.2957795)
 
 //DMP ABSOULUTE DEGREES OFFSET
-#define PITCHDMPOFFSET (float) (-0.1)
-#define ROLLDMPOFFSET  (float) (-2.9)
-#define YAWDMPOFFSET  (float) (-45.3)
+#define PITCHOFFSET (float) (0.0)
+#define ROLLOFFSET  (float) (0.0)
+#define YAWOFFSET  (float) (0.0)
 
 //Accel Manual offsets
-#define ACCELPITCHMANUALOFFSET (float)(0.3)
-#define ACCELROLLMANUALOFFSET (float)(-2.2)
+#define ACCELPITCHMANUALOFFSET (float)(0.0)
+#define ACCELROLLMANUALOFFSET (float)(0.0)
 
 //GYRO
 //#define ACCELCONSTANT (float)(16384.0)  //uncomment for AFS_SEL=0 (+-2G) used in init procedure
