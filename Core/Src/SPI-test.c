@@ -1,5 +1,5 @@
 /* Includes ------------------------------------------------------------------*/
-#include "SPI-test.h"
+#include "SPItest.h"
 
 
 /* SPI SPE mask */

@@ -33,7 +33,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "gyro.h"
+#include "MPUcalc.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -67,7 +67,7 @@ extern "C" {
 #define VDIVRESISTOR2 	1475
 #define BATTADCTOMV	(float)( (float)((VDIVRESISTOR1 + VDIVRESISTOR2) * 3300) / (float)((VDIVRESISTOR2 * 4095)) )
 #define BATTAVERAGETIME 50 //50 msec average
-#define  MINMSGPERSEC   10
+#define MINMSGPERSEC   10
 
 #define T_CLR_SCREEN 	"\x1b[2J"
 #define T_GO_TO			"\x1b[%d;%dH"
@@ -190,8 +190,8 @@ extern uint32_t togg4;
 extern uint32_t togg5;
 extern uint32_t togg6;
 
-//MPU 6050
-extern MPU6050str	mpu6050DataStr;
+//MPU structure
+extern struct MPUstr mpuDataStr;
 
 //Inputs
 extern float ThrottleINscaled;
@@ -219,6 +219,8 @@ extern struct FlashDatastruct FlashDataFlash;
 /* Private defines -----------------------------------------------------------*/
 #define LED1_Pin GPIO_PIN_13
 #define LED1_GPIO_Port GPIOC
+#define GYRO_CSN_Pin GPIO_PIN_4
+#define GYRO_CSN_GPIO_Port GPIOA
 #define NRF24_CE_Pin GPIO_PIN_12
 #define NRF24_CE_GPIO_Port GPIOB
 #define NRF24_IRQ_Pin GPIO_PIN_12

@@ -41,7 +41,7 @@ all: FlightControllerF401.elf secondary-outputs
 
 # Tool invocations
 FlightControllerF401.elf: $(OBJS) $(USER_OBJS) /home/primoz/MEGA/github/FlightControllerF401/STM32F401CCUX_FLASH.ld
-	arm-none-eabi-gcc -o "FlightControllerF401.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/primoz/MEGA/github/FlightControllerF401/STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="FlightControllerF401.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "FlightControllerF401.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/primoz/MEGA/github/FlightControllerF401/STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="FlightControllerF401.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

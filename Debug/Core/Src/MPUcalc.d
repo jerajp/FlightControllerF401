@@ -1,4 +1,4 @@
-Core/Src/gyro.o: ../Core/Src/gyro.c ../Core/Inc/gyro.h \
+Core/Src/MPUcalc.o: ../Core/Src/MPUcalc.c ../Core/Inc/MPUcalc.h \
  ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h \
  ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f401xc.h \
  ../Drivers/CMSIS/Include/core_cm4.h \
@@ -32,9 +32,9 @@ Core/Src/gyro.o: ../Core/Src/gyro.c ../Core/Inc/gyro.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/main.h ../Core/Inc/gyro.h
+ ../Core/Inc/main.h ../Core/Inc/MPUcalc.h
 
-../Core/Inc/gyro.h:
+../Core/Inc/MPUcalc.h:
 
 ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h:
 
@@ -104,4 +104,4 @@ Core/Src/gyro.o: ../Core/Src/gyro.c ../Core/Inc/gyro.h \
 
 ../Core/Inc/main.h:
 
-../Core/Inc/gyro.h:
+../Core/Inc/MPUcalc.h:

@@ -23,8 +23,10 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "tim.h"
 #include "nrf24.h"
+#include "MPUcalc.h"
+#include "MPU9250.h"
 #include <math.h>
 
 /* USER CODE END Includes */
@@ -132,7 +134,7 @@ uint32_t togg6hist;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern TIM_HandleTypeDef htim2;
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -479,26 +481,26 @@ void TIM2_IRQHandler(void)
   	 	 	 									nRF24_payloadTX[2] = (uint8_t)((BattmVAVG & 0xFF00)>>8);
 
   	 	 	 								  	//save Angle for NRF24 transfer
-  	 	 	 								  	if(mpu6050DataStr.Pitch<0)
+  	 	 	 								  	if(mpuDataStr.Pitch<0)
   	 	 	 								  	{
   	 	 	 								  		AnglePitchDIR=1;
-  	 	 	 								  	 	AnglePitchNRF24=mpu6050DataStr.Pitch*(-1);
+  	 	 	 								  	 	AnglePitchNRF24=mpuDataStr.Pitch*(-1);
   	 	 	 								  	}
   	 	 	 								  	else
   	 	 	 								  	{
   	 	 	 								  		AnglePitchDIR=0;
-  	 	 	 								  	 	AnglePitchNRF24=mpu6050DataStr.Pitch;
+  	 	 	 								  	 	AnglePitchNRF24=mpuDataStr.Pitch;
   	 	 	 								  	}
 
-  	 	 	 								  	if(mpu6050DataStr.Roll<0)
+  	 	 	 								  	if(mpuDataStr.Roll<0)
   	 	 	 								  	{
   	 	 	 								  		AngleRollDIR=1;
-  	 	 	 								  		AngleRollNRF24=mpu6050DataStr.Roll*(-1);
+  	 	 	 								  		AngleRollNRF24=mpuDataStr.Roll*(-1);
   	 	 	 								  	}
   	 	 	 								  	else
   	 	 	 								  	{
   	 	 	 								  		AngleRollDIR=0;
-  	 	 	 								  		AngleRollNRF24=mpu6050DataStr.Roll;
+  	 	 	 								  		AngleRollNRF24=mpuDataStr.Roll;
   	 	 	 								  	}
 
   	 	 	 								  	nRF24_payloadTX[3] = (uint8_t)(AnglePitchNRF24);
@@ -582,6 +584,13 @@ void TIM2_IRQHandler(void)
     		MSGcount=0;
     		LoopCounter=0;
   }//-----------------------------------------------------------------
+
+  //MPU 9250
+  watch1=TIM2->CNT;
+  MPU9250_GetData(&mpuDataStr);
+  MPU_CalculateFromRAWData(&mpuDataStr,0.002);
+  watch2=TIM2->CNT;
+  watch3=watch2-watch1;
 
   /* USER CODE END TIM2_IRQn 1 */
 }

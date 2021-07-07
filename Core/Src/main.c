@@ -33,7 +33,8 @@
 #include <stdio.h>
 #include <math.h>
 #include "nrf24.h"
-#include "gyro.h"
+#include "MPU9250.h"
+#include "MPUcalc.h"
 #include "stm32f4xx_it.h"
 /* USER CODE END Includes */
 
@@ -85,8 +86,8 @@ uint32_t togg6;
 uint32_t MotorStatus=MOTORINIT;
 uint32_t GyroCalibStatus=0;
 
-//MPU6050
-MPU6050str	mpu6050DataStr;
+//Gyro
+struct MPUstr mpuDataStr;
 
 struct FlashDatastruct FlashDataDefault; //Default constant embedded in Code
 struct FlashDatastruct FlashDataFlash;  //Constants read from Flash
@@ -192,6 +193,10 @@ int main(void)
 
   nRF24_CE_H();//Enable RX
 
+  //Gyro Init
+  MPU9250_Init();
+
+
   HAL_Delay(5000);//wait to connect battery
 
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
@@ -227,7 +232,7 @@ int main(void)
 	  sprintf(UartTXbuff0,T_CLR_SCREEN);
 	  WriteString(UartTXbuff0);
 
-	  /*sprintf(UartTXbuff0, "Motor Status %u MPU=%u \n\r",MotorStatus,MPU6050rezulatat);
+	  sprintf(UartTXbuff0, "Motor Status %u \n\r",MotorStatus);
 	  WriteString(UartTXbuff0);
 
 	  sprintf(UartTXbuff0, "ThrottleIN %.2f \n\r",ThrottleINscaled);
@@ -245,52 +250,52 @@ int main(void)
 	  sprintf(UartTXbuff0, "\n\r" );
 	  WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "Pitch=%.2f deg\n\r",mpu6050DataStr.Pitch);
+	  sprintf(UartTXbuff0, "Pitch=%.2f deg\n\r",mpuDataStr.Pitch);
 	  WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "Roll=%.2f deg\n\r",mpu6050DataStr.Roll);
+	  sprintf(UartTXbuff0, "Roll=%.2f deg\n\r",mpuDataStr.Roll);
 	  WriteString(UartTXbuff0);
 
-	  //sprintf(UartTXbuff0, "Gyro Pitch=%.2f deg\n\r",mpu6050DataStr.Angle_Gyro_Pitch);
+	  //sprintf(UartTXbuff0, "Gyro Pitch=%.2f deg\n\r",mpuDataStr.Angle_Gyro_Pitch);
 	  //WriteString(UartTXbuff0);
 
-	  //sprintf(UartTXbuff0, "Gyro Roll=%.2f deg\n\r",mpu6050DataStr.Angle_Gyro_Roll);
+	  //sprintf(UartTXbuff0, "Gyro Roll=%.2f deg\n\r",mpuDataStr.Angle_Gyro_Roll);
 	  //WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "Yaw-Gyro=%.2f deg\n\r",mpu6050DataStr.Angle_Gyro_Yaw);
+	  sprintf(UartTXbuff0, "Yaw-Gyro=%.2f deg\n\r",mpuDataStr.Angle_Gyro_Yaw);
 	  WriteString(UartTXbuff0);
 
 	  sprintf(UartTXbuff0, "\n\r" );
 	  WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "Accel Pitch=%.2f deg\n\r",mpu6050DataStr.Angle_Accel_Pitch);
+	  sprintf(UartTXbuff0, "Accel Pitch=%.2f deg\n\r",mpuDataStr.Angle_Accel_Pitch);
 	  WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "Accel Roll=%.2f deg\n\r",mpu6050DataStr.Angle_Accel_Roll);
+	  sprintf(UartTXbuff0, "Accel Roll=%.2f deg\n\r",mpuDataStr.Angle_Accel_Roll);
 	  WriteString(UartTXbuff0);
 
-	  //sprintf(UartTXbuff0, "Gyro X speed=%.2f deg/s\n\r",mpu6050DataStr.AngleSpeed_Gyro_X);
+	  //sprintf(UartTXbuff0, "Gyro X speed=%.2f deg/s\n\r",mpuDataStr.AngleSpeed_Gyro_X);
 	 //WriteString(UartTXbuff0);
 
-	  //sprintf(UartTXbuff0, "Gyro Y speed=%.2f deg/s\n\r",mpu6050DataStr.AngleSpeed_Gyro_Y);
+	  //sprintf(UartTXbuff0, "Gyro Y speed=%.2f deg/s\n\r",mpuDataStr.AngleSpeed_Gyro_Y);
 	  //WriteString(UartTXbuff0);
 
-	  //sprintf(UartTXbuff0, "Gyro Z speed=%.2f deg/s\n\r",mpu6050DataStr.AngleSpeed_Gyro_Z);
+	  //sprintf(UartTXbuff0, "Gyro Z speed=%.2f deg/s\n\r",mpuDataStr.AngleSpeed_Gyro_Z);
 	  //WriteString(UartTXbuff0);
 
 	  sprintf(UartTXbuff0, "\n\r" );
 	  WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "Acc Raw %d %d %d \n\r",mpu6050DataStr.Accelerometer_X_RAW,mpu6050DataStr.Accelerometer_Y_RAW,mpu6050DataStr.Accelerometer_Z_RAW);
+	  sprintf(UartTXbuff0, "Acc Raw %d %d %d \n\r",mpuDataStr.Accelerometer_X_RAW,mpuDataStr.Accelerometer_Y_RAW,mpuDataStr.Accelerometer_Z_RAW);
 	  WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "Gyro Raw %d %d %d \n\r",mpu6050DataStr.Gyroscope_X_RAW,mpu6050DataStr.Gyroscope_Y_RAW,mpu6050DataStr.Gyroscope_Z_RAW);
+	  sprintf(UartTXbuff0, "Gyro Raw %d %d %d \n\r",mpuDataStr.Gyroscope_X_RAW,mpuDataStr.Gyroscope_Y_RAW,mpuDataStr.Gyroscope_Z_RAW);
 	  WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "Gyro Offset %.1f %.1f %.1f \n\r",mpu6050DataStr.Offset_Gyro_X,mpu6050DataStr.Offset_Gyro_Y,mpu6050DataStr.Offset_Gyro_Z);
+	  sprintf(UartTXbuff0, "Gyro Offset %.1f %.1f %.1f \n\r",mpuDataStr.Offset_Gyro_X,mpuDataStr.Offset_Gyro_Y,mpuDataStr.Offset_Gyro_Z);
 	  WriteString(UartTXbuff0);
 
-	  sprintf(UartTXbuff0, "Gyro Cal %.1f %.1f %.1f \n\r",mpu6050DataStr.Gyroscope_X_Cal,mpu6050DataStr.Gyroscope_Y_Cal,mpu6050DataStr.Gyroscope_Z_Cal);
+	  sprintf(UartTXbuff0, "Gyro Cal %.1f %.1f %.1f \n\r",mpuDataStr.Gyroscope_X_Cal,mpuDataStr.Gyroscope_Y_Cal,mpuDataStr.Gyroscope_Z_Cal);
 	  WriteString(UartTXbuff0);
 
 	  sprintf(UartTXbuff0, "\n\r" );
@@ -375,7 +380,7 @@ int main(void)
 	  WriteString(UartTXbuff0);
 
 	  sprintf(UartTXbuff0, "Throttle Max %.2f Min I %.2f \n\r",FlashDataFlash.maxthrottle, FlashDataFlash.minthrottle);
-	  WriteString(UartTXbuff0);*/
+	  WriteString(UartTXbuff0);
 
 	  sprintf(UartTXbuff0, "\n\r" );
 	  WriteString(UartTXbuff0);

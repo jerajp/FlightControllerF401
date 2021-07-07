@@ -32,7 +32,8 @@ Core/Src/nrf24.o: ../Core/Src/nrf24.c ../Core/Inc/nrf24.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/SPI-test.h
+ ../Core/Inc/SPItest.h ../Core/Inc/spi.h ../Core/Inc/main.h \
+ ../Core/Inc/MPUcalc.h
 
 ../Core/Inc/nrf24.h:
 
@@ -102,4 +103,10 @@ Core/Src/nrf24.o: ../Core/Src/nrf24.c ../Core/Inc/nrf24.h \
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 
-../Core/Inc/SPI-test.h:
+../Core/Inc/SPItest.h:
+
+../Core/Inc/spi.h:
+
+../Core/Inc/main.h:
+
+../Core/Inc/MPUcalc.h:

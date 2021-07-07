@@ -1,4 +1,4 @@
-Core/Src/SPI-test.o: ../Core/Src/SPI-test.c ../Core/Inc/SPI-test.h \
+Core/Src/SPI-test.o: ../Core/Src/SPI-test.c ../Core/Inc/SPItest.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -33,7 +33,7 @@ Core/Src/SPI-test.o: ../Core/Src/SPI-test.c ../Core/Inc/SPI-test.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 
-../Core/Inc/SPI-test.h:
+../Core/Inc/SPItest.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 

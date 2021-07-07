@@ -1,16 +1,8 @@
 // Functions to manage the nRF24L01+ transceiver
 
-
 #include "nrf24.h"
-#include "SPI-test.h"
-
-extern SPI_HandleTypeDef hspi2;
-
-//HW dependent
-//Ti ukazi vrinejo 128 stevila ko prejema v TX ??!
-//HAL_SPI_Transmit(&hspi2, senddata,1,10);//Send first element
-//HAL_SPI_Receive(&hspi2, &returndata[0],1,10);
-
+#include "SPItest.h"
+#include "spi.h"
 
 // Function to transmit data packet
 // input:

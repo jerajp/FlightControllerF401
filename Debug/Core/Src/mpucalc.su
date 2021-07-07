@@ -1,0 +1,4 @@
+mpucalc.c:6:6:CalculateQuaternions	32	static
+mpucalc.c:22:6:CalculateGravityVector	16	static
+mpucalc.c:29:6:CalculateYawPitchRoll	48	static
+mpucalc.c:71:6:MPU_CalculateFromRAWData	80	static
