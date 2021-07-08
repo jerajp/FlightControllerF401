@@ -643,7 +643,7 @@ void TIM2_IRQHandler(void)
   //Write active parameters in flash
   if(FlashWriteFlag && MotorStatus==MOTOROFF && FlashWriteTimeoutCount==0)
   {
-  	  WriteFlashData(FLASHCONSTADDR, &FlashDataActive);
+  	  WriteFlashData(FLASHCONSTADDR,FLASHCONSTSECTOR, &FlashDataActive);
   	  ReadFlashData(FLASHCONSTADDR, &FlashDataFlash);//Read back values to Flash structure
   	  FlashWriteFlag=0;//reset
   }
@@ -651,7 +651,7 @@ void TIM2_IRQHandler(void)
   //Erase Flash Data
   if(FlashEraseFlag && MotorStatus==MOTOROFF && FlashEraseTimeoutCount==0)
   {
-  	  EraseFlashData(FLASHCONSTADDR);
+  	  EraseFlashData(FLASHCONSTSECTOR);
   	  FlashEraseFlag=0;//reset
   }
 

@@ -101,7 +101,18 @@ extern "C" {
 #define MOTORSTARTBLOCKTHRESHOLD	200  //max throttle stick position to allow start
 
 //FLASH DATA SPECIFIC
-#define FLASHCONSTADDR 0x800FC00
+#define FLASHCONSTADDR  	0x08020000
+#define FLASHCONSTSECTOR	FLASH_SECTOR_5
+
+//STM32F401xC
+//	Sector 0 0x0800 0000 - 0x0800 3FFF 16 Kbytes
+//	Sector 1 0x0800 4000 - 0x0800 7FFF 16 Kbytes
+//	Sector 2 0x0800 8000 - 0x0800 BFFF 16 Kbytes
+//	Sector 3 0x0800 C000 - 0x0800 FFFF 16 Kbytes
+//	Sector 4 0x0801 0000 - 0x0801 FFFF 64 Kbytes
+//	Sector 5 0x0802 0000 - 0x0803 FFFF 128 Kbytes
+//	Constants in Sector 5 - available room for program 128kbyte
+
 #define CONTROLWORD 7 //control word to check if Flash constants are present
 #define FLASHCONSTANTMULTIPLIER 100000
 
@@ -157,9 +168,9 @@ struct FlashDatastruct
 	float maxthrottle;       //800counts of 1000 (80%)
 };
 
-void WriteFlashData(uint32_t flashstartaddr, struct FlashDatastruct *p);
+void WriteFlashData(uint32_t flashstartaddr,uint32_t sectornumb, struct FlashDatastruct *p);
 void ReadFlashData(uint32_t flashstartaddr, struct FlashDatastruct *p);
-void EraseFlashData(uint32_t StartAddr);
+void EraseFlashData(uint32_t sectornumb);
 uint32_t CheckFlashData(uint32_t StartAddr);
 void WriteString(char string[]);
 void PrintCharUart (int ch);

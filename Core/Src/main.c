@@ -176,20 +176,25 @@ int main(void)
 	  ReadFlashData(FLASHCONSTADDR, &FlashDataActive);
 	  ReadFlashData(FLASHCONSTADDR, &FlashDataFlash);
 
+	  sprintf(UartTXbuff0,"Flash Data OK \n\r" );
+	  WriteString(UartTXbuff0);
+
   }
   else
   {
 	  //Write default values into Flash, Read back data into Active Structure
-	  //WriteFlashData(FLASHCONSTADDR, &FlashDataDefault);
-	  //ReadFlashData(FLASHCONSTADDR, &FlashDataActive);
-	  //ReadFlashData(FLASHCONSTADDR, &FlashDataFlash);
+	  WriteFlashData(FLASHCONSTADDR,FLASHCONSTSECTOR, &FlashDataDefault);
+	  ReadFlashData(FLASHCONSTADDR, &FlashDataActive);
+	  ReadFlashData(FLASHCONSTADDR, &FlashDataFlash);
+
+	  sprintf(UartTXbuff0,"Flash Default Data Written \n\r" );
+	  WriteString(UartTXbuff0);
   }//------------------------------------------------------------------------------------------------------
 
   //Gyro Init
   MPU9250_Init();
 
   HAL_Delay(400);//wait for stable power
-
 
   //NRF24 INIT-----------------------------------
   SPI2->CR1|=SPI_CR1_SPE; //enable SPI
@@ -250,7 +255,6 @@ int main(void)
   GyroCalibStatus=0;
 
   MotorStatus=MOTOROFF;
-
   HAL_TIM_Base_Start_IT(&htim2);//Start at the END of Main Initialization
 
   /* USER CODE END 2 */
@@ -486,21 +490,14 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 //Write Data into Flash starting from given address------------------------------------------------------------------
-void WriteFlashData(uint32_t StartAddr, struct FlashDatastruct *p)
+void WriteFlashData(uint32_t StartAddr, uint32_t Sectornumb, struct FlashDatastruct *p)
 {
-	FLASH_EraseInitTypeDef EraseInitStruct;
-
-	uint32_t PageError;
-
-	EraseInitStruct.TypeErase   = FLASH_TYPEERASE_SECTORS;
-	EraseInitStruct.Sector = StartAddr;
-	EraseInitStruct.NbSectors     = 1;
-
 	HAL_FLASH_Unlock();
 
-	//FLASH_PageErase(0x800FC00); //doesn't handle all registers PER regiser in CR is not cleared
+	FLASH_Erase_Sector(Sectornumb, FLASH_VOLTAGE_RANGE_3);
 
-	HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
+	sprintf(UartTXbuff0,"Flash Erased \n\r");
+	WriteString(UartTXbuff0);
 
 	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr, p->controlData);
 	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,StartAddr+4, (uint32_t) ( p->pid_p_gain_pitch * FLASHCONSTANTMULTIPLIER) );
@@ -527,21 +524,11 @@ void WriteFlashData(uint32_t StartAddr, struct FlashDatastruct *p)
 	HAL_FLASH_Lock();
 }
 
-void EraseFlashData(uint32_t StartAddr)
+void EraseFlashData(uint32_t Sectornumb)
 {
-	FLASH_EraseInitTypeDef EraseInitStruct;
-
-	uint32_t PageError;
-
-	EraseInitStruct.TypeErase   = FLASH_TYPEERASE_SECTORS;
-	EraseInitStruct.Sector = StartAddr;
-	EraseInitStruct.NbSectors     = 1;
-
 	HAL_FLASH_Unlock();
 
-	//FLASH_PageErase(0x800FC00); //doesn't handle all registers PER regiser in CR is not cleared
-
-	HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
+	FLASH_Erase_Sector(Sectornumb, FLASH_VOLTAGE_RANGE_3);
 
 	HAL_FLASH_Lock();
 }
