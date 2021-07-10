@@ -46,14 +46,25 @@ typedef enum SampleRateDivider_ {
 } SampleRateDivider;
 
 uint8_t MPU9250_Init();
-/* read the data, each argument should point to a array for x, y, and x */
+
+/* read the Gyro, Accel and Mag data*/
 void MPU9250_GetData(struct MPUstr* DataStruct);
+
+/* read the Gyro Data */
+void MPU9250_GetGyroData(struct MPUstr* DataStruct);
+
+/* read the Accel Data */
+void MPU9250_GetAccelData(struct MPUstr* DataStruct);
+
 /* sets the sample rate divider to values other than default */
 void MPU9250_SetSampleRateDivider(SampleRateDivider srd);
+
 /* sets the DLPF bandwidth to values other than default */
 void MPU9250_SetDLPFBandwidth(DLPFBandwidth bandwidth);
+
 /* sets the gyro full scale range to values other than default */
 void MPU9250_SetGyroRange(GyroRange range);
+
 /* sets the accelerometer full scale range to values other than default */
 void MPU9250_SetAccelRange(AccelRange range);
 

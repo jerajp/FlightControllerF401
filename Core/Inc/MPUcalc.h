@@ -5,6 +5,7 @@
 #include "stm32f4xx_hal.h"
 
 #include "main.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -101,8 +102,7 @@ struct Angles
 void CalculateQuaternions(struct Quaternions *q, uint8_t *fifodata);
 void CalculateGravityVector(struct Quaternions *q, struct GravityVector *v);
 void CalculateYawPitchRoll(struct Quaternions *q, struct GravityVector *v, struct Angles *ang);
-
 void MPU_CalculateFromRAWData(struct MPUstr* d,float timedelta);
-//void GetGyroOffset(I2C_HandleTypeDef* I2Cx, MPUstr* d, int32_t Loops, uint32_t Delayms);
+void GetGyroOffset(struct MPUstr* d, int32_t Loops, uint32_t Delayms);
 
 #endif /* MPU-CALC_H_ */

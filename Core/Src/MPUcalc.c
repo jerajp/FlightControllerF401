@@ -1,7 +1,7 @@
 // Calculate position from MPU data
 
 #include "MPUcalc.h"
-
+#include "MPU9250.h"
 
 void CalculateQuaternions(struct Quaternions *q, uint8_t *fifo_data)
 {
@@ -133,7 +133,7 @@ void MPU_CalculateFromRAWData(struct MPUstr* d,float timedelta)
 	d->Angle_Gyro_Yaw   = d->Angle_Gyro_Yaw_Rad * RADIANSTODEGREES;
 }
 
-/*void GetGyroOffset(I2C_HandleTypeDef* I2Cx, MPUstr* d, int32_t Loops, uint32_t Delayms)
+void GetGyroOffset(struct MPUstr* d, int32_t Loops, uint32_t Delayms)
 {
 	int32_t SUMGyroX,SUMGyroY,SUMGyroZ;
 	uint32_t i;
@@ -144,7 +144,8 @@ void MPU_CalculateFromRAWData(struct MPUstr* d,float timedelta)
 
 	for(i=0;i<Loops;i++)
 	{
-		  //MPU6050_gyroread(&hi2c2,&mpu6050DataStr);
+
+		MPU9250_GetGyroData(&mpuDataStr);
 
 		  SUMGyroX+=d->Gyroscope_X_RAW;
 		  SUMGyroY+=d->Gyroscope_Y_RAW;
@@ -159,7 +160,7 @@ void MPU_CalculateFromRAWData(struct MPUstr* d,float timedelta)
 	d->Offset_Gyro_Z=(float)(SUMGyroZ) / (float)(Loops);
 
 
-	//MPU6050_accread(&hi2c2,&mpu6050DataStr);
+	MPU9250_GetAccelData(&mpuDataStr);
 
 	MPU_CalculateFromRAWData(&mpuDataStr,0); //Gyro angles don't matter
 
@@ -172,6 +173,6 @@ void MPU_CalculateFromRAWData(struct MPUstr* d,float timedelta)
 
 	d->Angle_Gyro_Yaw = 0;
 	d->Angle_Gyro_Yaw_Rad = 0;
-}*/
+}
 
 

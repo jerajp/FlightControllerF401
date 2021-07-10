@@ -251,7 +251,7 @@ int main(void)
 
   //Get Gyro offset--------------------------------------
   GyroCalibStatus=1;
-  //GetGyroOffset(&hi2c2, &mpu6050DataStr, GYROCALIBVALUES, 1);
+  GetGyroOffset(&mpuDataStr, GYROCALIBVALUES, 1);
   GyroCalibStatus=0;
 
   MotorStatus=MOTOROFF;

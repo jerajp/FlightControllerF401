@@ -83,8 +83,10 @@ extern "C" {
 #define YAWOFFSET  (float) (0.0)
 
 //Accel Manual offsets
-#define ACCELPITCHMANUALOFFSET (float)(0.0)
-#define ACCELROLLMANUALOFFSET (float)(0.0)
+#define ACCELPITCHMANUALOFFSET (float)(-0.7)
+#define ACCELROLLMANUALOFFSET (float)(0.15)
+
+#define GYROCALIBVALUES (int32_t) (1000)
 
 //GYRO
 //#define ACCELCONSTANT (float)(16384.0)  //uncomment for AFS_SEL=0 (+-2G) used in init procedure

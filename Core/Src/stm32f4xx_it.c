@@ -586,11 +586,8 @@ void TIM2_IRQHandler(void)
   }//-----------------------------------------------------------------
 
   //MPU 9250
-  watch1=TIM2->CNT;
   MPU9250_GetData(&mpuDataStr);
-  watch2=TIM2->CNT;
   MPU_CalculateFromRAWData(&mpuDataStr,0.002);
-  watch3=TIM2->CNT;
 
   //PID input Filtered
   PitchPIDin =  /*(PitchPIDin * 0.99) */+ (mpuDataStr.Pitch  );
@@ -668,6 +665,7 @@ void TIM2_IRQHandler(void)
   	  	mpuDataStr.Angle_Gyro_Yaw_Rad = 0;
 
   		GyroCalibStatus=0;
+
 
   }//--------------------------------------------------------------------------------------------------
 

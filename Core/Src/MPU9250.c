@@ -23,6 +23,10 @@ const uint8_t GYRO_FS_SEL_250DPS = 0x00;
 const uint8_t GYRO_FS_SEL_500DPS = 0x08;
 const uint8_t GYRO_FS_SEL_1000DPS = 0x10;
 const uint8_t GYRO_FS_SEL_2000DPS = 0x18;
+
+const uint8_t GYRO_FS_SEL_2000DPS_NO_DLPF = 0x1B; //FCHOICE_B Bits 11 = FCHOICE Bits 00 -> Fs=32khz BW=8800Hz NO DLPF
+const uint8_t ACCEL_NO_DLPF=4;     				  //FCHOICE_B Bit=1   =FCHOICE Bit=0  	->FS=4khz BW=1046Hz NO DLPF
+
 const uint8_t ACCEL_CONFIG2 = 0x1D;
 const uint8_t DLPF_184 = 0x01;
 const uint8_t DLPF_92 = 0x02;
@@ -235,13 +239,13 @@ uint8_t MPU9250_Init()
 	writeRegister(ACCEL_CONFIG,ACCEL_FS_SEL_8G);
 
 	// setting the gyro range to 2000DPS as default
-	writeRegister(GYRO_CONFIG,GYRO_FS_SEL_2000DPS);
+	writeRegister(GYRO_CONFIG,GYRO_FS_SEL_2000DPS_NO_DLPF);
 
-	// setting bandwidth to 184Hz as default
-	writeRegister(ACCEL_CONFIG2,DLPF_184);
+	// setting bandwidth tof accelorometer
+	writeRegister(ACCEL_CONFIG2,ACCEL_NO_DLPF);
 
-	// setting gyro bandwidth to 184Hz
-	writeRegister(CONFIG,DLPF_184);
+	// setting gyro bandwidth to 184Hz only applicable if GYRO Config register set for DLPF
+	//writeRegister(CONFIG,DLPF_184);
 
 	// setting the sample rate divider to 0 as default
 	writeRegister(SMPDIV,0x00);
@@ -357,7 +361,7 @@ void MPU9250_SetSampleRateDivider(SampleRateDivider srd)
 	writeRegister(SMPDIV, srd);
 }
 
-/* read the data, each argiment should point to a array for x, y, and x */
+/* read the Gyro,Accel and Mag data*/
 void MPU9250_GetData(struct MPUstr* DataStruct)
 {
 	// grab the data from the MPU9250
@@ -379,3 +383,30 @@ void MPU9250_GetData(struct MPUstr* DataStruct)
 	DataStruct->Mag_Y_RAW = (int16_t)((float)magy * ((float)(_mag_adjust[1] - 128) / 256.0f + 1.0f));
 	DataStruct->Mag_Z_RAW  = (int16_t)((float)magz * ((float)(_mag_adjust[2] - 128) / 256.0f + 1.0f));
 }
+
+/* read the Gyro data*/
+void MPU9250_GetGyroData(struct MPUstr* DataStruct)
+{
+	// grab the data from the MPU9250
+	readRegisters(GYRO_OUT, 6, _buffer);
+
+	// combine into 16 bit values
+	DataStruct->Gyroscope_X_RAW = (((int16_t)_buffer[0]) << 8) | _buffer[1];
+	DataStruct->Gyroscope_Y_RAW = (((int16_t)_buffer[2]) << 8) | _buffer[3];
+	DataStruct->Gyroscope_Z_RAW = (((int16_t)_buffer[4]) << 8) | _buffer[5];
+}
+
+/* read the Accel data*/
+void MPU9250_GetAccelData(struct MPUstr* DataStruct)
+{
+	// grab the data from the MPU9250
+	readRegisters(ACCEL_OUT, 6, _buffer);
+
+	// combine into 16 bit values
+	DataStruct->Accelerometer_X_RAW = (((int16_t)_buffer[0]) << 8) | _buffer[1];
+	DataStruct->Accelerometer_Y_RAW = (((int16_t)_buffer[2]) << 8) | _buffer[3];
+	DataStruct->Accelerometer_Z_RAW = (((int16_t)_buffer[4]) << 8) | _buffer[5];
+}
+
+
+
