@@ -154,14 +154,14 @@ int main(void)
   FlashDataDefault.pid_p_gain_roll=3.0;
   FlashDataDefault.pid_i_gain_roll=0.0;
   FlashDataDefault.pid_d_gain_roll=400.0;
-  FlashDataDefault.pid_p_gain_yaw=3.0;
+  FlashDataDefault.pid_p_gain_yaw=4.0;
   FlashDataDefault.pid_i_gain_yaw=0.0;
   FlashDataDefault.pid_d_gain_yaw=0.0;
   FlashDataDefault.pid_max_pitch = 400;
   FlashDataDefault.pid_i_max_pitch = 100;
   FlashDataDefault.pid_max_roll = 400;
   FlashDataDefault.pid_i_max_roll = 100;
-  FlashDataDefault.pid_max_yaw = 0; //no yaw
+  FlashDataDefault.pid_max_yaw = 100;
   FlashDataDefault.pid_i_max_yaw = 100;
   FlashDataDefault.maxpitchdegree=20; //degrees
   FlashDataDefault.maxrolldegree=20;  //degrees
@@ -314,6 +314,19 @@ int main(void)
 	  sprintf(UartTXbuff0, "Yaw-Gyro=%.2f deg\n\r",mpuDataStr.Angle_Gyro_Yaw);
 	  WriteString(UartTXbuff0);
 
+	  sprintf(UartTXbuff0, "Gyro Z speed=%.2f deg/s\n\r",mpuDataStr.AngleSpeed_Gyro_Z);
+	  WriteString(UartTXbuff0);
+
+	  sprintf(UartTXbuff0, "YAW PID in=%.2f deg/s\n\r",YawPIDin);
+	  WriteString(UartTXbuff0);
+
+
+	  //sprintf(UartTXbuff0, "Gyro X speed=%.2f deg/s\n\r",mpuDataStr.AngleSpeed_Gyro_X);
+	  //WriteString(UartTXbuff0);
+
+	  //sprintf(UartTXbuff0, "Gyro Y speed=%.2f deg/s\n\r",mpuDataStr.AngleSpeed_Gyro_Y);
+	  //WriteString(UartTXbuff0);
+
 	  sprintf(UartTXbuff0, "\n\r" );
 	  WriteString(UartTXbuff0);
 
@@ -322,15 +335,6 @@ int main(void)
 
 	  sprintf(UartTXbuff0, "Accel Roll=%.2f deg\n\r",mpuDataStr.Angle_Accel_Roll);
 	  WriteString(UartTXbuff0);
-
-	  //sprintf(UartTXbuff0, "Gyro X speed=%.2f deg/s\n\r",mpuDataStr.AngleSpeed_Gyro_X);
-	 //WriteString(UartTXbuff0);
-
-	  //sprintf(UartTXbuff0, "Gyro Y speed=%.2f deg/s\n\r",mpuDataStr.AngleSpeed_Gyro_Y);
-	  //WriteString(UartTXbuff0);
-
-	  //sprintf(UartTXbuff0, "Gyro Z speed=%.2f deg/s\n\r",mpuDataStr.AngleSpeed_Gyro_Z);
-	  //WriteString(UartTXbuff0);
 
 	  sprintf(UartTXbuff0, "\n\r" );
 	  WriteString(UartTXbuff0);

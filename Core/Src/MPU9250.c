@@ -241,7 +241,7 @@ uint8_t MPU9250_Init()
 	// setting the gyro range to 2000DPS as default
 	writeRegister(GYRO_CONFIG,GYRO_FS_SEL_2000DPS_NO_DLPF);
 
-	// setting bandwidth tof accelorometer
+	// setting bandwidth of accelorometer
 	writeRegister(ACCEL_CONFIG2,ACCEL_NO_DLPF);
 
 	// setting gyro bandwidth to 184Hz only applicable if GYRO Config register set for DLPF

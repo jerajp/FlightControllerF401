@@ -1,5 +1,2 @@
-MPUcalc.c:6:6:CalculateQuaternions	32	static
-MPUcalc.c:22:6:CalculateGravityVector	16	static
-MPUcalc.c:29:6:CalculateYawPitchRoll	48	static
-MPUcalc.c:71:6:MPU_CalculateFromRAWData	80	static
-MPUcalc.c:136:6:GetGyroOffset	40	static
+MPUcalc.c:7:6:MPU_CalculateFromRAWData	80	static
+MPUcalc.c:72:6:GetGyroOffset	40	static

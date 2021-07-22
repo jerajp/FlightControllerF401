@@ -83,8 +83,8 @@ extern "C" {
 #define YAWOFFSET  (float) (0.0)
 
 //Accel Manual offsets
-#define ACCELPITCHMANUALOFFSET (float)(-0.7)
-#define ACCELROLLMANUALOFFSET (float)(0.15)
+#define ACCELPITCHMANUALOFFSET (float)(-0.3)
+#define ACCELROLLMANUALOFFSET (float)(-0.2)
 
 #define GYROCALIBVALUES (int32_t) (1000)
 
